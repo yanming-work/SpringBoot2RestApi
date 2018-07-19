@@ -1,0 +1,111 @@
+server:
+  port: 9443
+  session-timeout: 30  
+  tomcat.max-threads: 0  
+  tomcat.uri-encoding: UTF-8 
+  #支持https请求
+  ssl: 
+      key-store: classpath:keys/test.keystore
+      key-store-password: testhttps
+      keyStoreType: PKCS12
+      keyAlias: test
+ 
+management:
+   security:
+   enabled: false #关掉安全认证
+   port: 9099 #管理端口调整成9099
+   context-path: /actuator #actuator的访问路径
+endpoints:
+   shutdown:
+   enabled: true     
+info:
+  app:
+    name: "@project.name@" #从pom.xml中获取
+    description: "@project.description@"
+    version: "@project.version@"
+    spring-boot-version: "@project.parent.version@"
+    
+          
+spring:
+    http:
+        encoding:
+          force: true
+          charset: UTF-8
+          enabled: true
+    datasource:
+        name: test
+        url: jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=utf-8&useSSL=false
+        username: root
+        password: 123456
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        filters: stat
+        maxActive: 100
+        initialSize: 10
+        maxWait: 60000
+        minIdle: 10
+        timeBetweenEvictionRunsMillis: 60000
+        minEvictableIdleTimeMillis: 300000
+        #validationQuery: select 'x' from dual #oracle
+        validationQuery: select 'x'  #mysql
+        testWhileIdle: true
+        testOnBorrow: false
+        testOnReturn: false
+        poolPreparedStatements: true
+        maxPoolPreparedStatementPerConnectionSize: 50
+        maxOpenPreparedStatements: 50
+    #时间戳统一转换
+    jackson: 
+        date-format: yyyy-MM-dd HH:mm:ss
+        time-zone: GMT+8
+    cache:
+       type: REDIS
+       cache-names: redis_cache , ehcache #缓存的名字(可以不指定)
+       redis:
+         time-to-live: 60000  #很重要，缓存的有效时间，以便缓存的过期（单位为毫秒）
+    #redis缓存
+    redis:
+         #Redis数据库索引（默认为0）
+        database: 1
+        # Redis服务器地址
+        host: 192.168.0.51
+        # Redis服务器连接端口
+        port: 6379
+        # Redis服务器连接密码（默认为空）
+        password: msaredis
+        jedis:
+           pool:
+             #连接池最大连接数（使用负值表示没有限制）
+             max-active: 8
+             #连接池最大阻塞等待时间（使用负值表示没有限制）
+             max-wait: -1
+             #连接池中的最大空闲连接
+             max-idle: 8
+             #连接池中的最小空闲连接
+             min-idle: 0
+         #连接超时时间（毫秒）
+        timeout: 10000
+    #thymeleaf模板引擎，后缀为html
+    thymeleaf:
+        mode: HTML5  
+        encoding: utf-8  
+        servlet.content-type: text/html  
+        #（缓存要关闭，要不然有时候会看不到我们想要的东西）  
+        cache: false
+        prefix: classpath:/html/templates/
+        check-template-location: true  
+        suffix: .html  
+    
+
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.test.web.model
+
+#pagehelper
+pagehelper:
+    #helperDialect: oracle
+    helperDialect: mysql
+    reasonable: true
+    supportMethodsArguments: true
+    params: count=countSql
+    returnPageInfo: check

@@ -1,0 +1,136 @@
+第一步：为服务器生成证书
+
+使用keytool命令生成证书：
+
+keytool 
+
+-genkey 
+
+-alias test(别名) 
+
+-keypass testhttps(别名密码) 
+
+-keyalg RSA(算法) 
+
+-keysize 1024(密钥长度) 
+
+-validity 3650(有效期，天单位) 
+
+-keystore D:/keys/test.keystore(指定生成证书的位置和证书名称) 
+
+-storepass testhttps(获取keystore信息的密码)
+
+ 
+
+方便复制版：
+
+
+
+keytool -genkey -alias test -keypass testhttps -keyalg RSA -keysize 1024 -validity 3650 -keystore D:/keys/test.keystore -storepass testhttps
+
+keytool -importkeystore -srckeystore D:/keys/test.keystore -destkeystore D:/keys/test.keystore -deststoretype pkcs12
+
+
+点击回车即可在D:/keys/文件夹内生成名为：test.keystore的文件。
+
+成功后无提示信息
+
+注意：
+
+①D:/keys/ 目录需要提前手动创建好，否则会生成失败
+
+②提示输入域名的时候不能输入IP地址
+
+
+第二步：为客户端生成证书
+
+为浏览器生成证书，以便让服务器来验证它。
+
+为了能将证书顺利导入至IE和Firefox，证书格式应该是PKCS12，
+
+因此，使用如下命令生成：
+
+keytool 
+
+-genkey 
+
+-alias client 
+
+-keypass testhttps
+
+-keyalg RSA 
+
+-storetype PKCS12 
+
+
+-storepass testhttps 
+
+-keystore D:/keys/client.p12
+
+ 
+
+方便复制版：
+
+keytool -genkey -alias client -keypass testhttps -keyalg RSA -keysize 1024 -validity 3650 -storetype PKCS12 -keystore D:/keys/client.p12 -storepass testhttps
+
+
+ 
+第三步：让服务器信任客户端证书
+
+1、
+
+由于不能直接将PKCS12格式的证书库导入，
+
+必须先把客户端证书导出为一个单独的CER文件，使用如下命令：
+
+keytool -export -alias client -keystore D:/keys/client.p12 -storetype PKCS12 -keypass testhttps -file D:/keys/client.cer
+
+注意：
+
+Keypass：指定CER文件的密码，但会被忽略，而要求重新输入
+
+2、
+
+将该文件导入到服务器的证书库，添加为一个信任证书：
+
+keytool -import -v -file D:/keys/client.cer -keystore D:/keys/test.keystore -storepass testhttps
+
+完成之后通过list命令查看服务器的证书库，
+
+可以看到两个证书，一个是服务器证书，一个是受信任的客户端证书：
+
+keytool -list -v -keystore D:/keys/test.keystore
+
+
+
+第四步：让客户端信任服务器证书
+
+1、
+
+由于是双向SSL认证，客户端也要验证服务器证书，
+
+因此，必须把服务器证书添加到浏览器的“受信任的根证书颁发机构”。
+
+由于不能直接将keystore格式的证书库导入，
+
+必须先把服务器证书导出为一个单独的CER文件，使用如下命令：
+
+keytool -keystore D:/keys/test.keystore -export -alias test -file D:/keys/server.cer
+
+2、
+
+双击server.cer文件，按照提示安装证书，
+
+将证书填入到“受信任的根证书颁发机构”。
+
+填入方法：
+
+打开浏览器   - 工具  -  internet选项-内容- 证书-把中级证书颁发机构里的localhost(该名称即时你前面生成证书时填写的名字与姓氏)证书导出来-再把导出来的证书导入  受信任的根颁发机构  就OK了。
+
+application.yml
+  #支持https请求
+  ssl: 
+      key-store: classpath:test.keystore
+      key-store-password: testhttps
+      keyStoreType: PKCS12
+      keyAlias: test

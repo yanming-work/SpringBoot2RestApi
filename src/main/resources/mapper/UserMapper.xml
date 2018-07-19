@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.test.web.dao.UserDao">
+
+<resultMap id="BaseResultMap" type="com.test.web.model.User">
+      
+        <id column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="nick_name" jdbcType="VARCHAR" property="nickName" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="alive" jdbcType="INTEGER" property="alive" />
+         <result column="role" jdbcType="INTEGER" property="role" />
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+       
+        user_name,nick_name, password, alive, role
+    </sql>
+
+	<select id="findByUserName" resultMap="BaseResultMap" >
+		select *
+		from user
+		where user_name = #{userName}
+	</select>
+	
+	<select id="findByIdAndPwd" resultMap="BaseResultMap" parameterType="com.test.web.model.User">
+		select *
+		from user
+		where user_name = #{userName} and password = #{password}
+	</select>
+	
+	<insert id="register" parameterType="com.test.web.model.User">
+		insert into user(user_name,nick_name,password,alive,role)
+		values(#{userName},#{nickName},#{password},#{alive},#{role})
+	</insert>
+</mapper>
