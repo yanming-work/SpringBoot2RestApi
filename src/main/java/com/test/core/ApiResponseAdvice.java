@@ -6,6 +6,8 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+import com.test.core.result.ApiReturnObj;
+
 @SuppressWarnings("rawtypes")
 @RestControllerAdvice 
 /**
@@ -50,8 +52,19 @@ public class ApiResponseAdvice extends ApiResponseAdviceException    implements 
 			body=BeforeReturnBodyWriteUtil.beforeBodyWrite(body);
 		}
 		**/
-		//全部处理
-		return BeforeReturnBodyWriteUtil.beforeBodyWrite(body);
+		//void 无返回数据
+				String returnTypeName=null;
+				try{
+					returnTypeName=returnType.getGenericParameterType().getTypeName();
+				}catch (Exception e) {
+				}
+				
+				if("void".equals(returnTypeName)){
+					return new ApiReturnObj<>(0, "void接口无返回值");
+				}else{
+					//全部处理
+					return BeforeReturnBodyWriteUtil.beforeBodyWrite(body);
+				}
 	}
 	
 	

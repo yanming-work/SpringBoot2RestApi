@@ -17,9 +17,7 @@ public class UserServiceImpl extends RedisServiceImpl implements UserService
 	private UserDao userDao;
 	
 
-    @Autowired
-    StringRedisTemplate stringRedisTemplate;
-
+  
 	
 	public User login(User user)
 	{

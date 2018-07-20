@@ -27,15 +27,26 @@ public class FastJsonUtils {
 
     private static final SerializeConfig config_dateObj;  
     private static final SerializeConfig config;  
+    private static final SerializeConfig config2;  
+    private static final SerializeConfig config_utc_8; 
   //格式化日期
-    private static String dateFormat;
 
     static {  
     	//dateFormat = "yyyy-MM-dd HH:mm:ss";
-    	
-    	dateFormat="yyyy/MM/dd HH:mm:ss";
+    	String dateFormat="yyyy/MM/dd HH:mm:ss";
         config = new SerializeConfig();  
         config.put(java.util.Date.class,  new SimpleDateFormatSerializer(dateFormat)); //日期格式化
+        
+    	String dateFormat2="yyyy/MM/dd HH:mm:ss";
+        config2 = new SerializeConfig();  
+        config2.put(java.util.Date.class,  new SimpleDateFormatSerializer(dateFormat2)); //日期格式化
+       
+        String UTC_08_FORMAT="yyyy-MM-dd'T'HH:mm:ss'+08:00'";
+        config_utc_8 = new SerializeConfig();  
+        config_utc_8.put(java.util.Date.class,  new SimpleDateFormatSerializer(UTC_08_FORMAT)); //日期格式化
+        
+        
+        
         /*****日期对象***"date":{"date":30,"hours":12,"seconds":42,"month":10,"timezoneOffset":-480,"year":117,"minutes":26,"time":1512016002329,"day":4}********/
         config_dateObj = new SerializeConfig();  
         config_dateObj.put(java.util.Date.class, new JSONLibDataFormatSerializer()); // 使用和json-lib兼容的日期输出格式  
@@ -88,10 +99,34 @@ public class FastJsonUtils {
         return JSON.toJSONString(object, config, features);  
     }  
       
+   
+    
     public static String toJSONNoFeatures(Object object) {  
         return JSON.toJSONString(object, config);  
+    } 
+    
+    
+    public static String toJSONString2(Object object) {  
+        return JSON.toJSONString(object, config2, features);  
     }  
       
+   
+    
+    public static String toJSONNoFeatures2(Object object) {  
+        return JSON.toJSONString(object, config2);  
+    }  
+      
+    
+    public static String toJSONStringDateUTC8(Object object) {  
+        return JSON.toJSONString(object, config_utc_8, features);  
+    }  
+      
+   
+    
+    public static String toJSONNoFeaturesDateUTC8(Object object) {  
+        return JSON.toJSONString(object, config_utc_8);  
+    }  
+    
   
   
     public static Object toBean(String text) {  

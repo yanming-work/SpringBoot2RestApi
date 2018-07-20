@@ -15,10 +15,11 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.stereotype.Component;
 
 import com.test.core.service.RedisService;
 import com.test.core.util.FastJsonUtils;
-
+@Component("redisService")
 public class RedisServiceImpl implements RedisService {
 
 	@Resource

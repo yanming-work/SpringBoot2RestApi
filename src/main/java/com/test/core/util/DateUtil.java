@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,15 +19,33 @@ import org.apache.commons.lang3.StringUtils;
  * @Description:DateUtil 提供一些常用的时间想法的方法
  */
 public final class DateUtil {
+/**
+ *  几个时间名词：
 
+（1）GMT:格林威治标准时间
+
+（2）UTC:世界协调时间
+
+（3）DST:夏日节约时间
+
+（4）CST:中国标准时间
+ */
     //日期时间类型格式
-    private static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	public static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	public static final String DATETIME_FORMAT_ALL = "yyyy-MM-dd HH:mm:ss.SSS";
 
     //日期类型格式
-    private static final String DATE_FORMAT = "yyyy-MM-dd";
+    public static final String DATE_FORMAT = "yyyy-MM-dd";
 
     //时间类型的格式
-    private static final String TIME_FORMAT = "HH:mm:ss";
+    public static final String TIME_FORMAT = "HH:mm:ss";
+    public static final String TIME_FORMAT_ALL = "HH:mm:ss.SSS";
+    // UTC世界协调时间 格式，默认是ISO 8601标准，例如2015-02-27T00:07Z(Z零时区)、2015-02-27T08:07+08:00(+08:00东八区)
+    public static final String UTC_Z_FORMAT="yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String UTC_Z_FORMAT_ALL="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    
+    public static final String UTC_08_FORMAT="yyyy-MM-dd'T'HH:mm:ss'+08:00'";
+    public static final String UTC_08_FORMAT_ALL="yyyy-MM-dd'T'HH:mm:ss.SSS'+08:00'";
 
     //注意SimpleDateFormat不是线程安全的
     private static ThreadLocal<SimpleDateFormat> ThreadDateTime = new ThreadLocal<SimpleDateFormat>();
@@ -109,6 +128,161 @@ public final class DateUtil {
     public  static String date(Date date) {
         return DateInstance().format(date);
     }
+    
+    
+    
+    public  static String dateStr_UTC_Z(Date date) {
+    	SimpleDateFormat df = new SimpleDateFormat(UTC_Z_FORMAT);
+    	df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    	return df.format(date);
+    }
+    
+    public  static Date date_UTC_Z(String dateStr) {
+    	SimpleDateFormat df = new SimpleDateFormat(UTC_Z_FORMAT);
+    	df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    	try {
+			return df.parse(dateStr);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+    	return null;
+    }
+    
+    
+    public  static String dateStr_UTC_Z_ALL(Date date) {
+    	SimpleDateFormat df = new SimpleDateFormat(UTC_Z_FORMAT_ALL);
+    	df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    	return df.format(date);
+    }
+    
+    public  static Date date_UTC_Z_ALL(String dateStr) {
+    	SimpleDateFormat df = new SimpleDateFormat(UTC_Z_FORMAT_ALL);
+    	df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    	try {
+			return df.parse(dateStr);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+    	return null;
+    }
+    
+    
+    public  static String dateStr_UTC_08(Date date) {
+    	SimpleDateFormat df = new SimpleDateFormat(UTC_08_FORMAT_ALL);
+    	return df.format(date);
+    }
+    
+    public  static String dateStr_CST2UTC(String cstTime){
+    
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat(DATETIME_FORMAT);
+			return dateStr_UTC_Z(sdf.parse(cstTime));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+    return null;
+    }
+    
+    public  static String dateStr_UTC2CST(String utcTime){
+    	String utcTimePattern =DATE_FORMAT;
+        String subTime = utcTime.substring(10);//UTC时间格式以 yyyy-MM-dd 开头,将utc时间的前10位截取掉,之后是含有多时区时间格式信息的数据
+
+        //处理当后缀为:+8:00时,转换为:+08:00 或 -8:00转换为-08:00
+        if(subTime.indexOf("+") != -1){
+            subTime = changeUtcSuffix(subTime, "+");
+        }
+        if(subTime.indexOf("-") != -1){
+            subTime = changeUtcSuffix(subTime, "-");
+        }
+        utcTime = utcTime.substring(0, 10) + subTime;
+
+        //依据传入函数的utc时间,得到对应的utc时间格式
+        //步骤一:处理 T
+        if(utcTime.indexOf("T") != -1){
+            utcTimePattern = utcTimePattern + "'T'";
+        }
+
+        //步骤二:处理毫秒SSS
+        if(utcTime.indexOf(".") != -1){
+            utcTimePattern = utcTimePattern + "HH:mm:ss.SSS";
+        }else{
+            utcTimePattern = utcTimePattern + "HH:mm:ss";
+        }
+
+        //步骤三:处理时区问题
+        if(subTime.indexOf("+") != -1 || subTime.indexOf("-") != -1){
+            utcTimePattern = utcTimePattern + "XXX";
+        }
+        else if(subTime.indexOf("Z") != -1){
+            utcTimePattern = utcTimePattern + "'Z'";
+        }
+
+        if("yyyy-MM-dd HH:mm:ss".equals(utcTimePattern) || "yyyy-MM-dd HH:mm:ss.SSS".equals(utcTimePattern)){
+            return utcTime;
+        }
+
+        SimpleDateFormat utcFormater = new SimpleDateFormat(utcTimePattern);
+        utcFormater.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date gpsUtcDate = null;
+        try {
+            gpsUtcDate = utcFormater.parse(utcTime);
+        } catch (Exception e) {
+            return utcTime;
+        }
+        SimpleDateFormat localFormater = new SimpleDateFormat(DATETIME_FORMAT);
+        localFormater.setTimeZone(TimeZone.getDefault());
+        String localTime = localFormater.format(gpsUtcDate.getTime());
+        return localTime;
+    }
+    
+    
+    /**
+     * 函数功能描述:获取本地时区的表示(比如:第八区-->+08:00)
+     * @return
+     */
+    public static String getTimeZoneByNumExpress(){
+        Calendar cal = Calendar.getInstance();
+        TimeZone timeZone = cal.getTimeZone();
+        int rawOffset = timeZone.getRawOffset();
+        int timeZoneByNumExpress = rawOffset/3600/1000;
+        String timeZoneByNumExpressStr = "";
+        if(timeZoneByNumExpress > 0 && timeZoneByNumExpress < 10){
+            timeZoneByNumExpressStr = "+" + "0" + timeZoneByNumExpress + ":" + "00";
+        }
+        else if(timeZoneByNumExpress >= 10){
+            timeZoneByNumExpressStr = "+" + timeZoneByNumExpress + ":" + "00";
+        }
+        else if(timeZoneByNumExpress > -10 && timeZoneByNumExpress < 0){
+            timeZoneByNumExpress = Math.abs(timeZoneByNumExpress);
+            timeZoneByNumExpressStr = "-" + "0" + timeZoneByNumExpress + ":" + "00";
+        }else if(timeZoneByNumExpress <= -10){
+            timeZoneByNumExpress = Math.abs(timeZoneByNumExpress);
+            timeZoneByNumExpressStr = "-" + timeZoneByNumExpress + ":" + "00";
+        }else{
+            timeZoneByNumExpressStr = "Z";
+        }
+        return timeZoneByNumExpressStr;
+    } 
+    
+    /**
+     * 函数功能描述:修改时间格式后缀
+     * 函数使用场景:处理当后缀为:+8:00时,转换为:+08:00 或 -8:00转换为-08:00
+     * @param subTime
+     * @param sign
+     * @return
+     */
+    private static String changeUtcSuffix(String subTime, String sign){
+        String timeSuffix = null;
+        String[] splitTimeArrayOne = subTime.split("\\" + sign);
+        String[] splitTimeArrayTwo = splitTimeArrayOne[1].split(":");
+        if(splitTimeArrayTwo[0].length() < 2){
+            timeSuffix = "+" + "0" + splitTimeArrayTwo[0] + ":" + splitTimeArrayTwo[1];
+            subTime = splitTimeArrayOne[0] + timeSuffix;
+            return subTime;
+        }
+        return subTime;
+    }
+    
 
     /**
      * 将指定的字符串解析为时间类型
@@ -117,8 +291,13 @@ public final class DateUtil {
      * @return
      * @throws ParseException
      */
-    public  static Date date(String dateStr) throws ParseException {
-        return DateInstance().parse(dateStr);
+    public  static Date date(String dateStr) {
+    	try{
+    		return DateInstance().parse(dateStr);
+    	}catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return null;
     }
 
     /**
@@ -1255,6 +1434,7 @@ return null;
         
     
     public static void main(String[] args) {
+    	/**
       String[] dateStrArray=new String[]{
           "2014-03-12 12:05:34",
           "2014-03-12 12:05",
@@ -1294,13 +1474,31 @@ return null;
       Matcher m = p.matcher(str);
       while(m.find()){
       System.out.println(m.group(0));
-  /*
-  输出：
-   
-  您好
-  abc
-  */
+  
       }
-      
+      **/
+    	
+    	
+    	
+    	System.out.println(dateStr_UTC_Z(new Date()));
+    	//2018-07-25T07:26:34Z
+    	System.out.println(dateStr_UTC_Z_ALL(new Date()));
+    	//2018-07-25T07:26:34.680Z
+    	System.out.println(dateStr_UTC_08(new Date()));
+    	//2018-07-25T15:27:45.564+08:00
+    	System.out.println(dateStr_UTC2CST("2018-07-25T15:32:27.367+08:00"));
+    	System.out.println(dateStr_UTC2CST("2018-07-25T07:26:34.680Z"));
+    	
+    	
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		// CST(北京时间)在东8区
+		sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+		System.out.println(sdf.format(new Date()));
+		
+			try {
+				System.out.println(dateStr_UTC_Z(sdf.parse("2018-07-25 16:17:39")));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
     }
 }

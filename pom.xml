@@ -37,7 +37,7 @@
 		<!-- druid数据源管理 版本号 -->
 		<druid.version>1.1.10</druid.version>
 		<!-- 阿里巴巴JSON工具fastjson -->
-		<fastjson.version>1.2.41</fastjson.version>
+		<fastjson.version>1.2.47</fastjson.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<log4j.version>2.11.0</log4j.version>
 		<fasterxml.jackson.version>2.9.5</fasterxml.jackson.version>
@@ -187,7 +187,7 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.47</version>
+			<version>${fastjson.version}</version>
 		</dependency>
 
 		<dependency>
